@@ -14,22 +14,32 @@
 # limitations under the License.
 
 from launch import LaunchDescription
-from ament_index_python.packages import get_package_share_directory
-import launch_ros.actions
-import os
-import yaml
-from launch.substitutions import EnvironmentVariable
-import pathlib
-import launch.actions
 from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch_ros.actions import Node
+from launch_ros.substitutions import FindPackageShare
+from launch_ros.parameter_descriptions import ParameterFile
+
+params_path = PathJoinSubstitution([
+                    FindPackageShare('robot_localization'),
+                    "params",
+                    "ekf.yaml"
+                ])
+
+file_params_arg = DeclareLaunchArgument(
+        'params_file',
+        default_value=params_path,
+        description='Full path to the ROS2 parameters file.',
+    )
 
 def generate_launch_description():
     return LaunchDescription([
-        launch_ros.actions.Node(
+        file_params_arg,
+        Node(
             package='robot_localization',
             executable='ekf_node',
             name='ekf_filter_node',
             output='screen',
-            parameters=[os.path.join(get_package_share_directory("robot_localization"), 'params', 'ekf.yaml')],
-           ),
+            parameters=[LaunchConfiguration('params_file')],
+           )
 ])
